@@ -1,1 +1,12 @@
 /STL10
+/.venv
+/__pycache__
+/.pytest_cache
+/.mypy_cache
+/runs
+*.pyc
+*.pyo
+*.log
+*.pt
+*.pth
+*.ckpt

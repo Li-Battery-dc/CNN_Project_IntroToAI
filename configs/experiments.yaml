@@ -1,0 +1,67 @@
+defaults:
+  data_root: STL10
+  split_file: splits/stl10_seed42_valid20.json
+  output_dir: runs
+  seed: 42
+  device: auto
+  image_size: 96
+  batch_size: 128
+  num_workers: 4
+  epochs: 35
+  model:
+    name: basic_cnn
+  optimizer:
+    name: sgd
+    lr: 0.01
+    weight_decay: 0.0005
+  loss:
+    name: cross_entropy
+  transform:
+    name: basic
+
+experiments:
+  baseline_sgd_ce:
+    description: Basic CNN, no augmentation, custom SGD, custom cross entropy.
+
+  optimizer_adam:
+    description: Only replace SGD with custom Adam.
+    optimizer:
+      name: adam
+      lr: 0.001
+      betas: [0.9, 0.999]
+      eps: 1.0e-8
+      weight_decay: 0.0005
+
+  loss_label_smooth:
+    description: Only replace cross entropy with label smoothing cross entropy.
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+
+  data_aug:
+    description: Only add data augmentation.
+    transform:
+      name: train_aug
+
+  bn_dropout:
+    description: Replace BasicCNN with BatchNorm and Dropout variant.
+    model:
+      name: regularized_cnn
+      dropout: 0.3
+
+  combined_best:
+    description: Strong default using augmentation, regularized CNN, Adam, and label smoothing.
+    model:
+      name: regularized_cnn
+      dropout: 0.3
+    optimizer:
+      name: adam
+      lr: 0.001
+      betas: [0.9, 0.999]
+      eps: 1.0e-8
+      weight_decay: 0.0005
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+    transform:
+      name: train_aug
