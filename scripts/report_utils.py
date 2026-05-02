@@ -36,6 +36,15 @@ def write_history(history: list[dict], run_dir: Path) -> None:
     plot_history(history, run_dir / "history.png")
 
 
+def write_metric_history(history: list[dict], run_dir: Path) -> None:
+    save_json(history, run_dir / "history.json")
+    with (run_dir / "history.csv").open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(history[0]))
+        writer.writeheader()
+        writer.writerows(history)
+    plot_metric_history(history, run_dir / "history.png")
+
+
 def plot_history(history: list[dict], out_path: str | Path) -> None:
     epochs = [row["epoch"] for row in history]
     fig, axes = plt.subplots(1, 2, figsize=(10, 4), dpi=140)
@@ -47,6 +56,36 @@ def plot_history(history: list[dict], out_path: str | Path) -> None:
     axes[1].plot(epochs, [row["valid_accuracy"] for row in history], label="valid")
     axes[1].set(xlabel="epoch", ylabel="accuracy", title="Accuracy")
     axes[1].legend()
+    fig.tight_layout()
+    fig.savefig(out_path)
+    plt.close(fig)
+
+
+def plot_metric_history(history: list[dict], out_path: str | Path) -> None:
+    epochs = [row["epoch"] for row in history]
+    keys = [
+        key
+        for key, value in history[-1].items()
+        if key != "epoch" and isinstance(value, (int, float)) and not isinstance(value, bool)
+    ]
+    groups = [
+        ("Loss", [key for key in keys if "loss" in key]),
+        ("Accuracy", [key for key in keys if "accuracy" in key]),
+        ("Similarity", [key for key in keys if "cosine" in key or "similarity" in key]),
+        ("Learning Rate", [key for key in keys if key.startswith("lr")]),
+    ]
+    groups = [(title, group_keys) for title, group_keys in groups if group_keys]
+    if not groups:
+        return
+
+    fig, axes = plt.subplots(1, len(groups), figsize=(5 * len(groups), 4), dpi=140)
+    if len(groups) == 1:
+        axes = [axes]
+    for ax, (title, group_keys) in zip(axes, groups):
+        for key in group_keys:
+            ax.plot(epochs, [row[key] for row in history], label=key)
+        ax.set(xlabel="epoch", title=title)
+        ax.legend()
     fig.tight_layout()
     fig.savefig(out_path)
     plt.close(fig)

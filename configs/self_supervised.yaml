@@ -1,0 +1,124 @@
+defaults:
+  data_root: STL10
+  split_file: splits/stl10_seed42_valid20.json
+  output_dir: runs_ssl
+  seed: 42
+  device: auto
+  image_size: 96
+  num_workers: 4
+  amp: true
+  model:
+    name: regularized_cnn
+    dropout: 0.3
+
+experiments:
+  rotation_pretrain:
+    description: Self-supervised pretraining with 4-way image rotation prediction on all STL10/train images.
+    method: rotation
+    epochs: 100
+    batch_size: 1024
+    warmup_epochs: 0
+    transform:
+      name: rotation_pretrain
+    optimizer:
+      name: sgd
+      lr: 0.05
+      momentum: 0.9
+      weight_decay: 0.0005
+    checkpoint:
+      moving_average_window: 5
+
+  simclr_pretrain:
+    description: Self-supervised SimCLR pretraining on all STL10/train images.
+    method: simclr
+    epochs: 800
+    batch_size: 1024
+    warmup_epochs: 10
+    temperature: 0.5
+    transform:
+      name: simclr_pretrain
+    projection_head:
+      hidden_dim: 512
+      projection_dim: 128
+    optimizer:
+      name: lars
+      lr: 1.2
+      momentum: 0.9
+      weight_decay: 1.0e-6
+      eta: 0.001
+      eps: 1.0e-8
+      exclude_bias_norm: true
+    checkpoint:
+      moving_average_window: 5
+
+  finetune_full_labels:
+    description: Full-label finetuning entry for a self-supervised encoder checkpoint.
+    epochs: 80
+    batch_size: 256
+    warmup_epochs: 0
+    freeze_epochs: 5
+    pretrained: null
+    encoder_lr: 1.0e-4
+    classifier_lr: 1.0e-3
+    transform:
+      name: train_aug
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+    optimizer:
+      name: adamw
+      weight_decay: 0.0005
+
+  rotation_finetune:
+    description: Full-label finetuning from a rotation-pretrained encoder checkpoint.
+    epochs: 80
+    batch_size: 256
+    warmup_epochs: 0
+    freeze_epochs: 5
+    pretrained: null
+    encoder_lr: 1.0e-4
+    classifier_lr: 1.0e-3
+    transform:
+      name: train_aug
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+    optimizer:
+      name: adamw
+      weight_decay: 0.0005
+
+  simclr_finetune:
+    description: Full-label finetuning from a SimCLR-pretrained encoder checkpoint.
+    epochs: 80
+    batch_size: 256
+    warmup_epochs: 0
+    freeze_epochs: 5
+    pretrained: null
+    encoder_lr: 1.0e-4
+    classifier_lr: 1.0e-3
+    transform:
+      name: train_aug
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+    optimizer:
+      name: adamw
+      weight_decay: 0.0005
+
+  supervised_full_baseline:
+    description: Full-label supervised baseline on all STL10/train images without self-supervised pretraining.
+    epochs: 80
+    batch_size: 256
+    warmup_epochs: 0
+    freeze_epochs: 0
+    pretrained: null
+    encoder_lr: 1.0e-3
+    classifier_lr: 1.0e-3
+    transform:
+      name: train_aug
+    loss:
+      name: label_smoothing_cross_entropy
+      smoothing: 0.1
+    optimizer:
+      name: adamw
+      weight_decay: 0.0005

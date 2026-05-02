@@ -5,7 +5,7 @@ from typing import Any
 from .losses import CrossEntropyLoss, FocalLoss, LabelSmoothingCrossEntropy
 from .models import BasicCNN, RegularizedCNN
 from .optimizers import Adam, SGD
-from .transforms import basic_transform, train_aug_transform
+from .transforms import basic_transform, rotation_pretrain_transform, simclr_pretrain_transform, train_aug_transform
 
 
 def _kwargs(spec: dict[str, Any]) -> tuple[str, dict[str, Any]]:
@@ -37,5 +37,10 @@ def build_loss(spec: dict[str, Any]):
 
 def build_transform(spec: dict[str, Any], split: str, image_size: int):
     name, _ = _kwargs(spec)
-    fn = {"basic": basic_transform, "train_aug": train_aug_transform}[name]
+    fn = {
+        "basic": basic_transform,
+        "train_aug": train_aug_transform,
+        "rotation_pretrain": rotation_pretrain_transform,
+        "simclr_pretrain": simclr_pretrain_transform,
+    }[name]
     return fn(split=split, image_size=image_size)

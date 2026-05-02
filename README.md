@@ -40,6 +40,19 @@ python -m scripts.train --config configs/experiments.yaml --experiment baseline_
 python -m scripts.train --config configs/experiments.yaml --experiment combined_best
 ```
 
+自监督预训练与全标签微调：
+
+```bash
+python -m scripts.pretrain_ssl --config configs/self_supervised.yaml --method rotation
+python -m scripts.pretrain_ssl --config configs/self_supervised.yaml --method simclr
+
+python -m scripts.finetune_ssl --config configs/self_supervised.yaml --experiment supervised_full_baseline
+python -m scripts.finetune_ssl --config configs/self_supervised.yaml --experiment rotation_finetune --pretrained runs_ssl/<rotation_run>/encoder.pt
+python -m scripts.finetune_ssl --config configs/self_supervised.yaml --experiment simclr_finetune --pretrained runs_ssl/<simclr_run>/encoder.pt
+```
+
+自监督阶段只扫描 `STL10/train` 下全部 7000 张训练图像，不使用固定验证划分，也不会读取 `STL10/test`。微调阶段使用 `STL10/train` 的全部标签，训练结束后直接在 `STL10/test` 输出分类报告和混淆矩阵。
+
 快速冒烟测试：
 
 ```bash
@@ -91,5 +104,7 @@ bash scripts/run_all.sh configs/experiments.yaml
 - `runs/<timestamp>_<experiment>/test_classification_report.*`：测试集分类报告。
 - `runs/<timestamp>_<experiment>/test_confusion_matrix.*`：混淆矩阵。
 - `runs/<timestamp>_<experiment>/test_gradcam.png`：Grad-CAM 可视化。
+- `runs_ssl/<timestamp>_<method>/encoder.pt`：自监督训练过程中按训练损失滑动平均保存的最佳 encoder。
+- `runs_ssl/<timestamp>_<experiment>/final.pt`：全标签微调最终 checkpoint。
 
-`runs/`、`STL10/` 默认被 `.gitignore` 忽略。报告中需要引用的小图表可复制或汇总到 `reports/assets/` 后提交。
+`runs/`、`runs_ssl/`、`STL10/` 默认被 `.gitignore` 忽略。报告中需要引用的小图表可复制或汇总到 `reports/assets/` 后提交。

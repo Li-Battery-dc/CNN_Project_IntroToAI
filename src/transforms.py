@@ -35,6 +35,35 @@ def train_aug_transform(split: str, image_size: int = 96) -> T.Compose:
         ]
     )
 
+
+def rotation_pretrain_transform(split: str, image_size: int = 96) -> T.Compose:
+    return T.Compose(
+        [
+            T.Resize((image_size, image_size)),
+            T.RandomCrop(image_size, padding=4),
+            T.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.15),
+            T.ToTensor(),
+            T.Normalize(STL10_MEAN, STL10_STD),
+        ]
+    )
+
+
+def simclr_pretrain_transform(split: str, image_size: int = 96) -> T.Compose:
+    return T.Compose(
+        [
+            T.RandomResizedCrop(image_size, scale=(0.5, 1.0)),
+            T.RandomHorizontalFlip(p=0.5),
+            T.RandomApply(
+                [T.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.2)],
+                p=0.8,
+            ),
+            T.RandomGrayscale(p=0.2),
+            T.RandomApply([T.GaussianBlur(kernel_size=9, sigma=(0.1, 2.0))], p=0.5),
+            T.ToTensor(),
+            T.Normalize(STL10_MEAN, STL10_STD),
+        ]
+    )
+
 # 可视化的时候反归一化
 def denormalize(image: torch.Tensor) -> torch.Tensor:
     mean = torch.tensor(STL10_MEAN, dtype=image.dtype, device=image.device).view(3, 1, 1)
