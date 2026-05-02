@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .losses import CrossEntropyLoss, LabelSmoothingCrossEntropy
+from .losses import CrossEntropyLoss, FocalLoss, LabelSmoothingCrossEntropy
 from .models import BasicCNN, RegularizedCNN
 from .optimizers import Adam, SGD
 from .transforms import basic_transform, train_aug_transform
@@ -30,6 +30,7 @@ def build_loss(spec: dict[str, Any]):
     cls = {
         "cross_entropy": CrossEntropyLoss,
         "label_smoothing_cross_entropy": LabelSmoothingCrossEntropy,
+        "focal_loss": FocalLoss,
     }[name]
     return cls(**kwargs)
 
