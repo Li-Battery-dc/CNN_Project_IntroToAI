@@ -2,9 +2,7 @@
 
 本项目用于完成“人工智能原理课程项目 2”：基于 STL-10 数据集实现 CNN 图像分类、优化对比实验和 Grad-CAM 可解释性分析。
 
-## 目录约定
-
-数据不进入 Git，默认放在：
+## 数据集
 
 ```text
 STL10/
@@ -16,19 +14,16 @@ STL10/
     ...
 ```
 
-当前 pipeline 使用固定验证集划分文件 `splits/stl10_seed42_valid20.json`。如果数据重新拷贝到服务器，先重新生成一次 split，之后所有实验都复用同一份 split。
+当前 pipeline 使用固定验证集划分文件 `splits/stl10_seed42_valid20.json`，避免对比实验时验证效果不好。
 
 ## 环境配置
 
 服务器建议使用 Python 3.10/3.11 和 CUDA 12.1：
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+conda create -n "CNN" python=3.10
 pip install -r requirements-cu121.txt
 ```
-
-本项目的优化器和损失函数在 `src/optimizers/`、`src/losses/` 中手写实现。训练时使用 autograd 计算梯度，但不调用 PyTorch 的现成优化器或内置交叉熵损失类。
 
 ## 常用命令
 

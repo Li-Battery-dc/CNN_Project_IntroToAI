@@ -35,7 +35,7 @@ def train_aug_transform(split: str, image_size: int = 96) -> T.Compose:
         ]
     )
 
-
+# 可视化的时候反归一化
 def denormalize(image: torch.Tensor) -> torch.Tensor:
     mean = torch.tensor(STL10_MEAN, dtype=image.dtype, device=image.device).view(3, 1, 1)
     std = torch.tensor(STL10_STD, dtype=image.dtype, device=image.device).view(3, 1, 1)

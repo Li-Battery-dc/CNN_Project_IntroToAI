@@ -5,10 +5,6 @@ import json
 import random
 from pathlib import Path
 
-
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-root", default="STL10")
@@ -28,7 +24,7 @@ def main() -> None:
     counts = {}
 
     for name in classes:
-        files = sorted(path for path in (data_root / "train" / name).iterdir() if path.suffix.lower() in IMAGE_EXTENSIONS)
+        files = sorted(path for path in (data_root / "train" / name).iterdir() if path.suffix.lower() is ".png")
         rng.shuffle(files)
         n_valid = round(len(files) * args.valid_ratio)
         split_files = {"valid": sorted(files[:n_valid]), "train": sorted(files[n_valid:])}

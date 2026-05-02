@@ -66,7 +66,7 @@ def evaluate_epoch(model, loader, loss_fn, device: torch.device, desc: str = "ev
 
     return {"loss": total_loss / total_count, "accuracy": total_correct / total_count}
 
-
+# 用于报告结果
 @torch.no_grad()
 def collect_predictions(model, loader, loss_fn, device: torch.device) -> dict[str, Any]:
     model.eval()
