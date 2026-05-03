@@ -6,6 +6,7 @@ from torch import nn
 class BasicCNN(nn.Module):
     def __init__(self, num_classes: int = 10) -> None:
         super().__init__()
+        self.feature_dim = 128
         self.features = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
             nn.ReLU(inplace=False),
@@ -23,13 +24,15 @@ class BasicCNN(nn.Module):
             nn.ReLU(inplace=False),
         )
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = nn.Linear(128, num_classes)
+        self.classifier = nn.Linear(self.feature_dim, num_classes)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
         x = self.pool(x)
-        x = torch.flatten(x, 1)
-        return self.classifier(x)
+        return torch.flatten(x, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classifier(self.forward_features(x))
 
     def get_cam_target_layer(self) -> nn.Module:
         return _last_conv_layer(self.features)
@@ -38,6 +41,7 @@ class BasicCNN(nn.Module):
 class RegularizedCNN(nn.Module):
     def __init__(self, num_classes: int = 10, dropout: float = 0.3) -> None:
         super().__init__()
+        self.feature_dim = 128
         self.features = nn.Sequential(
             _conv_bn_relu(3, 32),
             _conv_bn_relu(32, 32),
@@ -53,14 +57,16 @@ class RegularizedCNN(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(dropout),
-            nn.Linear(128, num_classes),
+            nn.Linear(self.feature_dim, num_classes),
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
         x = self.pool(x)
-        x = torch.flatten(x, 1)
-        return self.classifier(x)
+        return torch.flatten(x, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classifier(self.forward_features(x))
 
     def get_cam_target_layer(self) -> nn.Module:
         return _last_conv_layer(self.features)
