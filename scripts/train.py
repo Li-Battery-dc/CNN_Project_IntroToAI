@@ -8,7 +8,7 @@ from scripts.report_utils import save_json, timestamp_run_dir, write_history
 from src.config import load_experiment_config
 from src.datasets import build_loader
 from src.engine import evaluate_epoch, train_one_epoch
-from src.factory import build_loss, build_model, build_optimizer
+from src.factory import build_loss, build_model, build_optimizer, build_scheduler
 from src.utils import resolve_device, set_seed
 
 
@@ -63,6 +63,7 @@ def main() -> None:
     model = build_model(config["model"], num_classes=len(class_names)).to(device)
     loss_fn = build_loss(config["loss"])
     optimizer = build_optimizer(config["optimizer"], params=model.parameters())
+    scheduler = build_scheduler(config.get("scheduler"), optimizer, int(config["epochs"]))
 
     print(f"run_dir={run_dir}")
     print(f"device={device}")
@@ -76,13 +77,15 @@ def main() -> None:
             "train_accuracy": train_metrics["accuracy"],
             "valid_loss": valid_metrics["loss"],
             "valid_accuracy": valid_metrics["accuracy"],
+            "lr": getattr(optimizer, "lr", None),
         }
         history.append(row)
         write_history(history, run_dir)
         print(
             f"epoch={epoch:03d} "
             f"train_loss={row['train_loss']:.4f} train_acc={row['train_accuracy']:.4f} "
-            f"valid_loss={row['valid_loss']:.4f} valid_acc={row['valid_accuracy']:.4f}"
+            f"valid_loss={row['valid_loss']:.4f} valid_acc={row['valid_accuracy']:.4f} "
+            f"lr={row['lr']:.6g}"
         )
         if row["valid_accuracy"] > best_acc:
             best_acc = row["valid_accuracy"]
@@ -98,6 +101,8 @@ def main() -> None:
                 },
                 checkpoint_path,
             )
+        if scheduler is not None:
+            scheduler.step(epoch)
 
     save_json({"best_valid_accuracy": best_acc, "checkpoint": checkpoint_path.as_posix()}, run_dir / "best.json")
     print(f"best_valid_accuracy={best_acc:.4f}")

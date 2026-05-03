@@ -8,6 +8,8 @@ EXPERIMENTS=(
   loss_label_smooth
   data_aug
   bn_dropout
+  baseline_strong
+  vgg_medium_tuned
   combined_best
 )
 

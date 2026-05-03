@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from .losses import CrossEntropyLoss, FocalLoss, LabelSmoothingCrossEntropy
-from .models import BasicCNN, RegularizedCNN
+from .models import BasicCNN, RegularizedCNN, VGGCNN
 from .optimizers import Adam, SGD
+from .schedulers import build_scheduler
 from .transforms import basic_transform, rotation_pretrain_transform, simclr_pretrain_transform, train_aug_transform
 
 
@@ -15,7 +16,7 @@ def _kwargs(spec: dict[str, Any]) -> tuple[str, dict[str, Any]]:
 
 def build_model(spec: dict[str, Any], num_classes: int):
     name, kwargs = _kwargs(spec)
-    cls = {"basic_cnn": BasicCNN, "regularized_cnn": RegularizedCNN}[name]
+    cls = {"basic_cnn": BasicCNN, "regularized_cnn": RegularizedCNN, "vgg_cnn": VGGCNN}[name]
     return cls(num_classes=num_classes, **kwargs)
 
 

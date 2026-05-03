@@ -3,6 +3,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+
 class BasicCNN(nn.Module):
     def __init__(self, num_classes: int = 10) -> None:
         super().__init__()
@@ -54,6 +55,48 @@ class RegularizedCNN(nn.Module):
             _conv_bn_relu(64, 128),
             _conv_bn_relu(128, 128),
         )
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(self.feature_dim, num_classes),
+        )
+
+    def forward_features(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.features(x)
+        x = self.pool(x)
+        return torch.flatten(x, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.classifier(self.forward_features(x))
+
+    def get_cam_target_layer(self) -> nn.Module:
+        return _last_conv_layer(self.features)
+
+
+class VGGCNN(nn.Module):
+    def __init__(
+        self,
+        num_classes: int = 10,
+        channels: list[int] | tuple[int, ...] = (64, 128, 256),
+        blocks: list[int] | tuple[int, ...] = (2, 2, 2),
+        dropout: float = 0.05,
+    ) -> None:
+        super().__init__()
+        if len(channels) != len(blocks):
+            raise ValueError("channels and blocks must have the same length")
+
+        layers: list[nn.Module] = []
+        in_channels = 3
+        for out_channels, num_blocks in zip(channels, blocks):
+            for _ in range(int(num_blocks)):
+                layers.append(_conv_bn_relu(in_channels, int(out_channels)))
+                in_channels = int(out_channels)
+            layers.append(nn.MaxPool2d(kernel_size=2))
+            if dropout > 0:
+                layers.append(nn.Dropout2d(dropout))
+
+        self.feature_dim = int(channels[-1])
+        self.features = nn.Sequential(*layers)
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
         self.classifier = nn.Sequential(
             nn.Dropout(dropout),
